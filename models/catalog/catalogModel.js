@@ -14,7 +14,7 @@ const catalogueSchema = new Schema({
     type: Number,
     required: true,
   },
-  created_data: {
+  created_date: {
     type: String,
     default: null,
   },
@@ -24,6 +24,6 @@ const catalogueSchema = new Schema({
   },
 });
 
-const Catalogue = mongoose.model("Catalogue", catalogueSchema);
+const Catalogue = mongoose.model("Catalog", catalogueSchema);
 
 module.exports = Catalogue;

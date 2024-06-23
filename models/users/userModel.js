@@ -27,7 +27,7 @@ const userSchema = new Schema({
     type: String,
     default: null,
   },
-  created_data: {
+  created_date: {
     type: String,
     default: null,
   },
