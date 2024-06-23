@@ -1,5 +1,6 @@
 const Property = require("../../models/property/propertyModel");
 const recordsPerPage = require("../../config/pagination");
+const imageValidate = require("../../utils/imageValidate");
 
 const getPropertys = async (req, res, next) => {
   try {
@@ -54,7 +55,7 @@ const adminDeleteProperty = async (req, res, next) => {
   try {
     const Propertys = await Property.findById(req.params.id).orFail();
     await Propertys.remove();
-    res.json({ message: "product removed" });
+    res.json({ message: "Propertys removed" });
   } catch (err) {
     next(err);
   }
@@ -117,10 +118,80 @@ const adminCreateProperty = async (req, res, next) => {
   }
 };
 
+const adminUpload = async (req, res, next) => {
+  try {
+    if (!req.files || !!req.files.images === false) {
+      return res.status(400).send("No files were uploaded.");
+    }
+
+    const validateResult = imageValidate(req.files.images);
+    if (validateResult.error) {
+      return res.status(400).send(validateResult.error);
+    }
+
+    const path = require("path");
+    const { v4: uuidv4 } = require("uuid");
+    const uploadDirectory = path.resolve(
+      __dirname,
+      "../../public",
+      "images",
+      "property"
+    );
+
+    let property = await Property.findById(req.query.propertyId).orFail();
+
+    let imagesTable = [];
+    if (Array.isArray(req.files.images)) {
+      imagesTable = req.files.images;
+    } else {
+      imagesTable.push(req.files.images);
+    }
+
+    for (let image of imagesTable) {
+      var fileName = uuidv4() + path.extname(image.name);
+      var uploadPath = uploadDirectory + "/" + fileName;
+      property.images.push({ path: "/images/property/" + fileName });
+      image.mv(uploadPath, function (err) {
+        if (err) {
+          return res.status(500).send(err);
+        }
+      });
+    }
+    await property.save();
+    return res.send("Files uploaded!");
+  } catch (err) {
+    next(err);
+  }
+};
+
+const adminDeletePropertyImage = async (req, res, next) => {
+  try {
+    const imagePath = decodeURIComponent(req.params.imagePath);
+    const path = require("path");
+    const finalPath = path.resolve("../../public") + imagePath;
+
+    const fs = require("fs");
+    fs.unlink(finalPath, (err) => {
+      if (err) {
+        res.status(500).send(err);
+      }
+    });
+    await Property.findOneAndUpdate(
+      { _id: req.params.propertyId },
+      { $pull: { images: { path: imagePath } } }
+    ).orFail();
+    return res.end();
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getPropertyById,
   getPropertys,
   adminGetPropertys,
   adminDeleteProperty,
   adminCreateProperty,
+  adminUpload,
+  adminDeletePropertyImage,
 };

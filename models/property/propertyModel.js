@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const Catalogue = require("../catalog/catalogModel");
 
-const image_templatesSchema = mongoose.Schema({
+const images = mongoose.Schema({
   path: { type: String, required: true },
 });
 const propertySchema = new Schema({
@@ -47,7 +47,7 @@ const propertySchema = new Schema({
     },
   ],
 
-  image_templates: [image_templatesSchema],
+  images: [images],
 
   created_date: {
     type: String,
@@ -59,10 +59,12 @@ const propertySchema = new Schema({
   },
 });
 
-propertySchema.index(
-  { property_name: "text", property_description: "text" },
-  { id_catalogue: "text" }
-);
+propertySchema.index({
+  property_name: "text",
+  property_description: "text",
+  id_catalogue: "text",
+  property_name: "TextIndex",
+});
 
 const Property = mongoose.model("Property", propertySchema);
 
